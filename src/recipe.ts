@@ -1,6 +1,10 @@
 import fs from 'fs';
 import { EOL } from 'os';
 
+import cheerio from 'cheerio';
+
+import { fetchHtml } from './html';
+
 const TITLE_HEADER = 'title';
 const CALORIES_HEADER = 'calories';
 const CARBOHYDRATE_HEADER = 'carbohydrate';
@@ -42,4 +46,39 @@ export function readRecipesFromJson(jsonPath: string): Recipe[] {
 
 export function writeRecipesToJson(recipes: Recipe[], jsonPath: string): void {
     fs.writeFileSync(jsonPath, JSON.stringify(recipes, null, 2));
+}
+
+export async function fetchRecipesFromUrl(url: string): Promise<Recipe[]> {
+    const html = await fetchHtml(url);
+    return findRecipesFromHtml(html).map((recipe) => ({ ...recipe, url }));
+}
+
+function findRecipesFromHtml(html: string): Omit<Recipe, 'url'>[] {
+    const $ = cheerio.load(html);
+
+    const categories = $('.fit-post-categories').first().children().map((i, e) => $(e).text()).get();
+    const titles = $('.recipe-instructions-headline').map((_, e) => $(e).text().trim()).get();
+    const nutritions = $('.macros-bottom-content').map((_, c) => 
+        $(c).find('.macros-bottom-info').map((_, i) => {
+            const label = $(i).find('.macros-label').text().trim().toLowerCase();
+            const textValue = $(i).find('.macros').text().replace(/[^\d\.]/g, '');
+            const value = textValue.length > 0 ? (textValue.includes('.') ? parseFloat(textValue) : parseInt(textValue)) : undefined;
+            return {
+                [label]: value
+            };
+        }).get().reduce((acc, cur) => ({ ...acc, ...cur }), {})
+    ).get();
+
+    if (titles.length !== nutritions.length) {
+        throw new Error(`Inconsistent nutrition captured for recipes: (${titles.length}) recipes found, but (${nutritions.length}) sets of nutrition captured.`);
+    }
+
+    return titles.map((title, i) => ({
+        title,
+        categories,
+        calories: nutritions[i].calories,
+        carbohydrate: nutritions[i].carbs,
+        fat: nutritions[i].fat,
+        protein: nutritions[i].protein,
+    }));
 }
