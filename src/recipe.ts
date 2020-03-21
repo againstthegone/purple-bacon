@@ -29,3 +29,17 @@ export function writeRecipesToCsv(recipes: Recipe[], csvPath: string) {
     });
     fs.writeFileSync(csvPath, [headers, ...data].join(EOL));
 }
+
+export function readRecipesFromJson(jsonPath: string): Recipe[] {
+    try {
+        const buffer = fs.readFileSync(jsonPath);
+        return JSON.parse(buffer.toString());
+    }
+    catch (e) {
+        return [];
+    }
+}
+
+export function writeRecipesToJson(recipes: Recipe[], jsonPath: string): void {
+    fs.writeFileSync(jsonPath, JSON.stringify(recipes, null, 2));
+}

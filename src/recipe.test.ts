@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { EOL } from 'os';
 
-import { writeRecipesToCsv, Recipe } from "./recipe";
+import { readRecipesFromJson, writeRecipesToCsv, writeRecipesToJson, Recipe } from "./recipe";
 
 describe('recipe', () => {
     describe('writeRecipesToCsv', () => {
@@ -50,6 +50,42 @@ describe('recipe', () => {
             expect(recipes).toEqual(['"First title",205,11,0,6,n,n,y,y,https://test-link', '"Second title",365,16,6,0,y,y,y,n,https://test-link']);
 
             fs.unlinkSync(csvPath);
+        });
+    });
+
+    describe('readRecipesFromJson', () => {
+        it('should be able to read the recipes from a JSON file', () => {
+            const jsonPath = 'read.json';
+            fs.writeFileSync(jsonPath, '[ { "title": "Test title" } ]');
+    
+            const recipes = readRecipesFromJson(jsonPath);
+            expect(recipes[0].title).toEqual('Test title');
+    
+            fs.unlinkSync(jsonPath);
+        });
+    
+        it('should be able to cope where there is not a JSON file', () => {
+            const recipes = readRecipesFromJson('does_not_exist.json');
+            expect(recipes).toEqual([]);
+        });
+    });
+
+    describe('writeRecipesFromJson', () => {
+        it('should write a recipe to the file specified', () => {
+            const jsonPath = 'write.json';
+            writeRecipesToJson([{ title: 'a new test recipe', url: 'https://a-new-test-recipe-link' }] as Recipe[], jsonPath);
+    
+            const data = fs.readFileSync(jsonPath).toString().split(EOL);
+            expect(data).toEqual([
+                '[',
+                '  {',
+                '    "title": "a new test recipe",',
+                '    "url": "https://a-new-test-recipe-link"',
+                '  }',
+                ']'
+            ]);
+
+            fs.unlinkSync(jsonPath);
         });
     });
 });
