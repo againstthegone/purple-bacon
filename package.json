@@ -6,10 +6,16 @@
   "scripts": {
     "build": "tsc",
     "prestart": "npm run build",
-    "start": "node ."
+    "start": "node .",
+    "test": "jest --detectOpenHandles --colors"
   },
   "devDependencies": {
+    "@types/jest": "25.1.4",
+    "@types/jest-when": "2.7.0",
     "@types/node": "13.9.2",
+    "jest": "25.1.0",
+    "jest-when": "2.7.0",
+    "ts-jest": "25.2.1",
     "typescript": "3.8.3"
   }
 }
