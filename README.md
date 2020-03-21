@@ -1,5 +1,5 @@
 # purple-bacon
-Scraper for an unnamed website to csv.  The website contains categorised recipes with nutritional information.
+Scraper for an unnamed website to csv. The website contains categorised recipes with nutritional information.
 
 ## Run
 ```npm run start <website>```
